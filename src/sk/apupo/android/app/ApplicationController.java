@@ -28,6 +28,6 @@ public class ApplicationController extends Application {
     }
     
     protected DaoController instantiateDaoController() {
-    	return new DaoController(this, null, null, null);
+    	return new DaoController(this, "database.sqlite", null, null, null);
     }
 }

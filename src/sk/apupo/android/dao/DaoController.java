@@ -6,7 +6,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import sk.apupo.android.utils.ObjectReflectionUtil;
-
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteDatabase.CursorFactory;
@@ -14,7 +13,7 @@ import de.greenrobot.dao.AbstractDao;
 
 public class DaoController {
 	
-	private static final String DB_NAME					=					"shoppinglist.sqlite";
+	public static boolean DEBUG								=						true;
 	
 	private Object helper;
 	private Object writableSession;
@@ -23,16 +22,25 @@ public class DaoController {
 	protected Class<?> daoMasterClass;
 	protected Class<?> daoSessionClass;
 	
-	private String databasePath;
+	private String databaseName;
+	
+	public String getDatabaseName() { return this.databaseName; }
+	
+	public String getDatabasePath() {
+		if(DEBUG) return this.context.getExternalFilesDir(null) + File.separator + "databases" + File.separator;
+		else return this.context.getFilesDir() + File.separator + "databases" + File.separator;
+	}
 	
 	private Context context;
+	public Context getContext() { return this.context; }
 	
-	public DaoController(Context context, Class<?> devOpenHelperClass, Class<?> daoMasterClass, Class<?> daoSessionClass) {
+	public DaoController(Context context, String databaseName, Class<?> devOpenHelperClass, Class<?> daoMasterClass, Class<?> daoSessionClass) {
 		this.context = context;
+		this.databaseName = databaseName;
 		this.devOpenHelperClass = devOpenHelperClass;
 		this.daoMasterClass = daoMasterClass;
 		this.daoSessionClass = daoSessionClass;
-		this.databasePath = context.getExternalFilesDir(null) + File.separator + DB_NAME;
+
 		initializeHelper();
 	}
 	
@@ -40,7 +48,7 @@ public class DaoController {
 		if (this.writableSession == null) {
 			Method method;
 			SQLiteDatabase db;
-			Constructor constructor;
+			Constructor<?> constructor;
 			Object daoMaster = null;
 			try {
 				method = ObjectReflectionUtil.getMethod(this.helper.getClass(), "getWritableDatabase", null);
@@ -82,7 +90,7 @@ public class DaoController {
 		try {
 			Class<?>[] args = new Class[] {Context.class, String.class, CursorFactory.class};
 			Constructor<?> constructor = this.devOpenHelperClass.getConstructor(args);
-			Object[] initArgs = new Object[] {this.context, this.databasePath, null};
+			Object[] initArgs = new Object[] {getContext(), getDatabaseFile().getAbsolutePath(), null};
 			this.helper = constructor.newInstance(initArgs);
 		} catch (NoSuchMethodException e) {
 			e.printStackTrace();
@@ -104,6 +112,6 @@ public class DaoController {
 	}
 	
 	protected File getDatabaseFile() {
-		return new File(this.databasePath);
+		return new File(getDatabasePath() + getDatabaseName());
 	}
 }
